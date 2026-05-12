@@ -50,9 +50,9 @@ Return the complete JSON now:`;
 
   const models = [
     'gemini-3.1-flash-lite',
-    'gemini-3.0-flash-lite',
+    'gemini-2.5-flash-lite',
     'gemini-2.5-flash',
-    'gemma-3-27b-it'
+    'gemini-3-flash-lite'
   ];
 
   let lastError = null;
@@ -66,7 +66,7 @@ Return the complete JSON now:`;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.75, maxOutputTokens: 4096 }
+            generationConfig: { temperature: 0.75, maxOutputTokens: 8192 }
           })
         }
       );
