@@ -12,39 +12,42 @@ module.exports = async function handler(req, res) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'API key not configured on server' });
 
-  const prompt = `You are a world-class educational content creator. Generate comprehensive, engaging educational materials for the topic or content below.
-Your response must be ONLY valid JSON — no preamble, no markdown fences, no explanation, nothing before or after the JSON object.
+  const prompt = `You are Genio — a world-class AI educational designer and instructional writer.
 
-Topic/Content: ${topic.trim()}
+A user has given you this input:
+"""
+${topic.trim()}
+"""
 
-Return exactly this JSON structure:
-{
-  "title": "Clear, engaging title for this topic",
-  "overview": "Write 3 well-developed paragraphs explaining this topic for a curious learner. Make it vivid, clear, and engaging. Separate paragraphs with \\n\\n.",
-  "keyPoints": [
-    "Specific, insightful key point as a complete sentence",
-    "Another distinct key insight",
-    "Another distinct key insight",
-    "Another distinct key insight",
-    "Another distinct key insight",
-    "A final synthesizing insight"
-  ],
-  "flashcards": [
-    {"front": "A meaningful question or term that tests understanding", "back": "A clear, accurate answer or definition"},
-    {"front": "...", "back": "..."},
-    {"front": "...", "back": "..."},
-    {"front": "...", "back": "..."},
-    {"front": "...", "back": "..."}
-  ],
-  "quiz": [
-    {"question": "A well-crafted multiple choice question", "options": ["A) First option", "B) Second option", "C) Third option", "D) Fourth option"], "correct": 0, "explanation": "Clear explanation of why this answer is correct"},
-    {"question": "...", "options": ["A) ...", "B) ...", "C) ...", "D) ..."], "correct": 1, "explanation": "..."},
-    {"question": "...", "options": ["A) ...", "B) ...", "C) ...", "D) ..."], "correct": 2, "explanation": "..."},
-    {"question": "...", "options": ["A) ...", "B) ...", "C) ...", "D) ..."], "correct": 3, "explanation": "..."}
-  ]
-}`;
+STEP 1 — DETECT INTENT:
+Read the input carefully. Classify it as one of:
+- "script": User wants a teaching script, lesson plan, demo class, presentation script, or mentions timestamps/tone/pacing/self-introduction/demo
+- "study": User wants to learn or study a topic (flashcards, quiz, overview)
+- "both": User wants both a script AND study materials
 
-  // Model priority list — tries each in order if one fails
+STEP 2 — GENERATE OUTPUT:
+Respond ONLY with valid JSON. No preamble, no markdown fences, nothing outside the JSON.
+
+Always include these base fields:
+- title: clear engaging title
+- type: one of "script", "study", "both"
+- overview: 3 vivid paragraphs separated by \\n\\n
+- keyPoints: array of 6 complete-sentence insights
+- flashcards: array of 5 objects with "front" and "back"
+- quiz: array of 4 objects, each with "question", "options" (array of 4 strings starting with A) B) C) D)), "correct" (0-indexed integer), "explanation"
+
+If type is "script" or "both", also include:
+- script: array of segment objects, each with:
+  - timestamp: e.g. "0:00 – 1:30"
+  - segment: name of this section e.g. "Self Introduction", "Hook", "Concept Explanation", "Solved Problem 1", "Q&A Wrap-up"
+  - tone: e.g. "warm and friendly", "energetic", "calm and clear", "encouraging"
+  - pacing: one of "slow", "medium", "fast"
+  - content: the full word-for-word script for this segment. Be rich, natural, conversational. Include real-life examples, analogies, solved problems inline where appropriate. Write exactly as a teacher would speak — not bullet points, full sentences and natural speech. Include [PAUSE], [WRITE ON BOARD], [SMILE], [LOOK AROUND ROOM] stage directions in brackets where helpful.
+
+Make the script genuinely useful — timestamps that are realistic, tone that matches the segment purpose, pacing that helps the teacher deliver well.
+
+Return the complete JSON now:`;
+
   const models = [
     'gemini-3.1-flash-lite',
     'gemini-3.0-flash-lite',
@@ -63,14 +66,13 @@ Return exactly this JSON structure:
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+            generationConfig: { temperature: 0.75, maxOutputTokens: 4096 }
           })
         }
       );
 
       const data = await response.json();
 
-      // If model not found or quota hit, try next
       if (!response.ok) {
         lastError = data.error?.message || `Model ${model} failed`;
         console.warn(`Model ${model} failed:`, lastError);
@@ -83,7 +85,7 @@ Return exactly this JSON structure:
       if (start === -1 || end === -1) throw new Error('No JSON in response');
 
       const parsed = JSON.parse(raw.slice(start, end + 1));
-      console.log(`Success with model: ${model}`);
+      console.log(`Success with model: ${model}, type: ${parsed.type}`);
       return res.status(200).json(parsed);
 
     } catch (err) {
@@ -93,7 +95,6 @@ Return exactly this JSON structure:
     }
   }
 
-  // All models failed
   console.error('All models failed. Last error:', lastError);
   return res.status(500).json({ error: 'Content generation failed. Please try again.' });
 };
