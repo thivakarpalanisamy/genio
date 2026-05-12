@@ -171,6 +171,7 @@
   </div>
 </div>
 
+<div id="history-list" style="display:none;max-width:720px;margin:0 auto 0.5rem;padding:0 1.5rem;"></div>
 <div class="suggestions">
   <span class="sug-label">Quick start:</span>
   <span class="sug-chip" onclick="use('Photosynthesis for 8th grade CBSE')">Photosynthesis — 8th grade</span>
@@ -207,6 +208,45 @@
 
 <script>
 const state = { data: null, flipped: {}, selected: {}, revealed: {} };
+const HISTORY_KEY = 'genio_history';
+
+function saveToHistory(topic, data) {
+  try {
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    history.unshift({ topic, title: data.title, type: data.type, ts: Date.now(), data });
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 5)));
+    renderHistory();
+  } catch(e) {}
+}
+
+function renderHistory() {
+  try {
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    const el = document.getElementById('history-list');
+    if (!el) return;
+    if (history.length === 0) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.innerHTML = '<div class="sug-label" style="margin-bottom:6px;">Recent generations</div>' +
+      history.map((h, i) =>
+        `<div class="sug-chip" style="display:inline-flex;align-items:center;gap:6px;" onclick="loadHistory(${i})">
+          ${h.type === 'script' || h.type === 'both' ? '📋' : '📖'} ${h.title}
+        </div>`
+      ).join('');
+  } catch(e) {}
+}
+
+function loadHistory(i) {
+  try {
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    if (!history[i]) return;
+    state.data = history[i].data;
+    Object.assign(state, { flipped: {}, selected: {}, revealed: {} });
+    document.getElementById('g-input').value = history[i].topic;
+    buildResultUI();
+    document.getElementById('g-results').style.display = 'block';
+    document.getElementById('g-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch(e) {}
+}
 const loadMsgs = ['Reading your intent...', 'Generating overview...', 'Building flashcards...', 'Crafting quiz questions...', 'Writing the script...', 'Almost ready...'];
 let msgTimer = null, stepTimer = null, msgIdx = 0, stepIdx = 0;
 
@@ -261,8 +301,8 @@ async function generate() {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || 'Server error');
     }
-
     state.data = await res.json();
+    saveToHistory(input, state.data);
     buildResultUI();
     document.getElementById('g-results').style.display = 'block';
     document.getElementById('g-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -419,11 +459,19 @@ function updateScore() {
 
 function renderScript() {
   const segments = state.data.script;
+  const fullText = segments.map(seg =>
+    `[${seg.timestamp}] ${seg.segment} | Tone: ${seg.tone} | Pacing: ${seg.pacing}\n\n${seg.content}`
+  ).join('\n\n---\n\n');
+  window._scriptText = fullText;
   const pacingClass = p => p ? p.toLowerCase().split(' ')[0] : '';
 
   document.getElementById('tab-script').innerHTML =
-    `<div class="script-intro">
-      📋 &nbsp; <span>Teaching script with timestamps, tone and pacing markers. Designed to be read aloud exactly as written.</span>
+    `<div class="script-intro" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <span>📋 &nbsp; Teaching script with timestamps, tone and pacing. Read aloud exactly as written.</span>
+      <div style="display:flex;gap:8px;">
+        <button onclick="copyScript()" style="font-size:12px;padding:5px 14px;background:var(--purple-dim);border:1px solid rgba(167,139,250,0.3);border-radius:var(--radius-sm);color:var(--purple);cursor:pointer;font-family:var(--font-sans, sans-serif);" id="copy-btn">Copy</button>
+        <button onclick="downloadScript()" style="font-size:12px;padding:5px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);cursor:pointer;font-family:var(--font-sans, sans-serif);">Download</button>
+      </div>
     </div>` +
     segments.map((seg, i) => {
       const content = (seg.content || '').replace(/\[([^\]]+)\]/g, '<span class="stage-dir">[$1]</span>');
@@ -441,6 +489,24 @@ function renderScript() {
       </div>`;
     }).join('');
 }
+ 
+ function copyScript() {
+  navigator.clipboard.writeText(window._scriptText || '').then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+
+function downloadScript() {
+  const title = (state.data?.title || 'script').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  const blob = new Blob([window._scriptText || ''], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${title}_script.txt`;
+  a.click();
+}
 </script>
+<script>renderHistory();</script>
 </body>
 </html>
