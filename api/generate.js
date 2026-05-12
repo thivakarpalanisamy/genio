@@ -44,36 +44,56 @@ Return exactly this JSON structure:
   ]
 }`;
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
-        })
+  // Model priority list — tries each in order if one fails
+  const models = [
+    'gemini-3.1-flash-lite',
+    'gemini-3.0-flash-lite',
+    'gemini-2.5-flash',
+    'gemma-3-27b-it'
+  ];
+
+  let lastError = null;
+
+  for (const model of models) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      // If model not found or quota hit, try next
+      if (!response.ok) {
+        lastError = data.error?.message || `Model ${model} failed`;
+        console.warn(`Model ${model} failed:`, lastError);
+        continue;
       }
-    );
 
-    const data = await response.json();
+      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const start = raw.indexOf('{');
+      const end = raw.lastIndexOf('}');
+      if (start === -1 || end === -1) throw new Error('No JSON in response');
 
-    if (!response.ok) {
-      console.error('Gemini error:', data);
-      return res.status(500).json({ error: data.error?.message || 'Gemini API error' });
+      const parsed = JSON.parse(raw.slice(start, end + 1));
+      console.log(`Success with model: ${model}`);
+      return res.status(200).json(parsed);
+
+    } catch (err) {
+      lastError = err.message;
+      console.warn(`Model ${model} threw:`, err.message);
+      continue;
     }
-
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const start = raw.indexOf('{');
-    const end = raw.lastIndexOf('}');
-    if (start === -1 || end === -1) throw new Error('No JSON found in response');
-
-    const parsed = JSON.parse(raw.slice(start, end + 1));
-    return res.status(200).json(parsed);
-
-  } catch (err) {
-    console.error('Handler error:', err);
-    return res.status(500).json({ error: 'Content generation failed. Please try again.' });
   }
+
+  // All models failed
+  console.error('All models failed. Last error:', lastError);
+  return res.status(500).json({ error: 'Content generation failed. Please try again.' });
 };
