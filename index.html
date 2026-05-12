@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Genio — Learn Anything</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #07090F;
+    --surface: #0E1118;
+    --surface2: #161B26;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #F0EDE8;
+    --muted: #8B8FA8;
+    --accent: #F5A623;
+    --accent-dim: rgba(245,166,35,0.12);
+    --green: #2ECC71;
+    --green-dim: rgba(46,204,113,0.12);
+    --red: #E74C3C;
+    --red-dim: rgba(231,76,60,0.12);
+    --blue: #5B8DEF;
+    --blue-dim: rgba(91,141,239,0.12);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(7,9,15,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent); }
+  .nav-badge {
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid rgba(245,166,35,0.2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .hero {
+    text-align: center;
+    padding: 4rem 2rem 3rem;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .hero-tag {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .hero-tag::before, .hero-tag::after {
+    content: '';
+    width: 32px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 600;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+    color: var(--text);
+  }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+  .hero p {
+    font-size: 16px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .input-wrap {
+    max-width: 680px;
+    margin: 0 auto 1rem;
+    padding: 0 1.5rem;
+  }
+  .input-box {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    transition: border-color 0.2s;
+  }
+  .input-box:focus-within { border-color: rgba(245,166,35,0.4); }
+  .input-box textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+    resize: none;
+    min-height: 80px;
+  }
+  .input-box textarea::placeholder { color: #444a5e; }
+  .input-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .char-count { font-size: 12px; color: #444a5e; }
+
+  .suggestions {
+    max-width: 680px;
+    margin: 0 auto 2.5rem;
+    padding: 0 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sug-label { font-size: 12px; color: #444a5e; width: 100%; margin-bottom: 2px; }
+  .sug-chip {
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .sug-chip:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+
+  .btn-generate {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    background: var(--accent);
+    color: #07090F;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-generate:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+  .btn-generate:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .loading-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    max-width: 680px;
+    margin: 0 auto;
+    display: none;
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1.25rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .load-msg { font-size: 15px; color: var(--muted); }
+  .load-steps {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .load-step {
+    font-size: 11px;
+    color: #444a5e;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 20px;
+    transition: all 0.3s;
+  }
+  .load-step.active { color: var(--accent); border-color: rgba(245,166,35,0.3); background: var(--accent-dim); }
+
+  .results {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 1.5rem 4rem;
+    display: none;
+  }
+  .result-title {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+  }
+  .result-meta {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .meta-chip {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .meta-chip.green { background: var(--green-dim); color: var(--green); }
+  .meta-chip.blue { background: var(--blue-dim); color: var(--blue); }
+  .meta-chip.amber { background: var(--accent-dim); color: var(--accent); }
+
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    border: 1px solid var(--border);
+  }
+  .tab {
+    flex: 1;
+    padding: 8px;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .overview-text p { font-size: 15px; line-height: 1.8; color: #C8C5BF; margin-bottom: 1rem; }
+
+  .keypoint {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 1rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    transition: border-color 0.15s;
+  }
+  .keypoint:hover { border-color: var(--border2); }
+  .kp-num { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; color: var(--accent); line-height: 1; min-width: 28px; }
+  .kp-text { font-size: 14px; line-height: 1.65; color: #C8C5BF; }
+
+  .fc-hint { font-size: 13px; color: var(--muted); margin-bottom: 1rem; }
+  .flashcard {
+    padding: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .flashcard::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .flashcard.flipped { background: var(--surface2); border-color: rgba(46,204,113,0.2); }
+  .flashcard.flipped::before { background: var(--green); opacity: 1; }
+  .flashcard:hover { border-color: var(--border2); }
+  .fc-side-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .fc-side-label.q-lbl { color: #444a5e; }
+  .fc-side-label.a-lbl { color: var(--green); }
+  .fc-text { font-size: 15px; color: var(--text); line-height: 1.55; }
+  .fc-flip-hint { position: absolute; bottom: 12px; right: 14px; font-size: 11px; color: #444a5e; }
+
+  .score-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.875rem 1.25rem;
+    background: var(--blue-dim);
+    border: 1px solid rgba(91,141,239,0.2);
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.25rem;
+    font-size: 14px;
+    color: var(--blue);
+    font-weight: 500;
+    display: none;
+  }
+  .q-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 14px; }
+  .q-text { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1.55; margin-bottom: 1rem; }
+  .q-num { font-family: 'Fraunces', serif; color: var(--accent); font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block; }
+  .q-option {
+    padding: 0.7rem 1rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: #C8C5BF;
+    cursor: pointer;
+    margin-bottom: 8px;
+    transition: all 0.15s;
+  }
+  .q-option:hover:not(.locked) { border-color: var(--border2); color: var(--text); }
+  .q-option.sel { border-color: rgba(255,255,255,0.25); color: var(--text); }
+  .q-option.correct { background: var(--green-dim); border-color: rgba(46,204,113,0.3); color: var(--green); cursor: default; }
+  .q-option.wrong { background: var(--red-dim); border-color: rgba(231,76,60,0.3); color: var(--red); cursor: default; }
+  .q-option.locked { cursor: default; }
+  .btn-check {
+    margin-top: 8px;
+    padding: 7px 16px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: none;
+  }
+  .btn-check:hover { background: var(--surface2); }
+  .q-explanation {
+    margin-top: 12px;
+    padding: 0.875rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+    display: none;
+  }
+
+  .error-bar {
+    max-width: 680px;
+    margin: 0 auto 1rem;
+    padding: 0.875rem 1.25rem;
+    background: var(--red-dim);
+    border: 1px solid rgba(231,76,60,0.2);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--red);
+    display: none;
+  }
+
+  .footer { text-align: center; padding: 2rem; font-size: 12px; color: #333a50; border-top: 1px solid var(--border); margin-top: 2rem; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="logo">Ge<span>ni</span>o</div>
+  <div class="nav-badge">Early Access</div>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag">AI Learning Engine</div>
+  <h1>Learn <em>anything</em>,<br/>in every format</h1>
+  <p>Type a topic or paste any content. Genio turns it into overviews, key points, flashcards, and quizzes — instantly.</p>
+</section>
+
+<div class="input-wrap">
+  <div class="input-box">
+    <textarea id="g-input" placeholder="e.g. Photosynthesis, The French Revolution, How black holes form, Mitosis vs Meiosis..."></textarea>
+    <div class="input-footer">
+      <span class="char-count" id="char-count">0 chars</span>
+      <button class="btn-generate" id="g-btn" onclick="generate()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 3l1.09 3.26L16.35 7l-3.26 1.09L12 11.35 10.91 8.09 7.65 7l3.26-1.09L12 3z"/><path d="M5 14l.7 2.1L7.8 17l-2.1.7L5 19.8l-.7-2.1L2.2 17l2.1-.7L5 14z"/><path d="M19 14l.7 2.1 2.1.7-2.1.7-.7 2.1-.7-2.1-2.1-.7 2.1-.7L19 14z"/></svg>
+        Generate
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="suggestions">
+  <span class="sug-label">Try these:</span>
+  <span class="sug-chip" onclick="use('The water cycle')">The water cycle</span>
+  <span class="sug-chip" onclick="use('Causes of World War 1')">Causes of World War 1</span>
+  <span class="sug-chip" onclick="use('How the human immune system works')">Human immune system</span>
+  <span class="sug-chip" onclick="use('Newton\'s laws of motion')">Newton's laws</span>
+  <span class="sug-chip" onclick="use('Plate tectonics and earthquakes')">Plate tectonics</span>
+</div>
+
+<div class="error-bar" id="g-error"></div>
+
+<div class="loading-state" id="g-loading">
+  <div class="spinner"></div>
+  <p class="load-msg" id="load-msg">Analyzing your topic...</p>
+  <div class="load-steps">
+    <span class="load-step" id="step-1">Overview</span>
+    <span class="load-step" id="step-2">Key points</span>
+    <span class="load-step" id="step-3">Flashcards</span>
+    <span class="load-step" id="step-4">Quiz</span>
+  </div>
+</div>
+
+<div class="results" id="g-results">
+  <h2 class="result-title" id="r-title"></h2>
+  <div class="result-meta">
+    <span class="meta-chip green">✓ Overview</span>
+    <span class="meta-chip blue">✓ Key points</span>
+    <span class="meta-chip amber">✓ Flashcards · Quiz</span>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('overview', this)">Overview</button>
+    <button class="tab" onclick="switchTab('keypoints', this)">Key points</button>
+    <button class="tab" onclick="switchTab('flashcards', this)">Flashcards</button>
+    <button class="tab" onclick="switchTab('quiz', this)">Quiz</button>
+  </div>
+
+  <div class="tab-content active" id="tab-overview"></div>
+  <div class="tab-content" id="tab-keypoints"></div>
+  <div class="tab-content" id="tab-flashcards"></div>
+  <div class="tab-content" id="tab-quiz"></div>
+</div>
+
+<div class="footer">Genio · Built for curious minds</div>
+
+<script>
+const state = { data: null, flipped: {}, selected: {}, revealed: {} };
+const loadMsgs = ['Analyzing your topic...', 'Generating key insights...', 'Building flashcards...', 'Crafting your quiz...', 'Almost done...'];
+let msgTimer = null, stepTimer = null, msgIdx = 0, stepIdx = 0;
+
+document.getElementById('g-input').addEventListener('input', function() {
+  document.getElementById('char-count').textContent = this.value.length + ' chars';
+});
+document.getElementById('g-input').addEventListener('keydown', function(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') generate();
+});
+
+function use(text) {
+  document.getElementById('g-input').value = text;
+  document.getElementById('char-count').textContent = text.length + ' chars';
+  generate();
+}
+
+function startLoadAnim() {
+  msgIdx = 0; stepIdx = 0;
+  const steps = ['step-1','step-2','step-3','step-4'];
+  steps.forEach(s => document.getElementById(s).className = 'load-step');
+  document.getElementById('load-msg').textContent = loadMsgs[0];
+  msgTimer = setInterval(() => {
+    msgIdx = Math.min(msgIdx + 1, loadMsgs.length - 1);
+    document.getElementById('load-msg').textContent = loadMsgs[msgIdx];
+  }, 2200);
+  stepTimer = setInterval(() => {
+    if (stepIdx < steps.length) {
+      document.getElementById(steps[stepIdx]).className = 'load-step active';
+      stepIdx++;
+    }
+  }, 1800);
+}
+
+function stopLoadAnim() {
+  clearInterval(msgTimer);
+  clearInterval(stepTimer);
+}
+
+async function generate() {
+  const input = document.getElementById('g-input').value.trim();
+  if (!input) return;
+
+  document.getElementById('g-error').style.display = 'none';
+  document.getElementById('g-results').style.display = 'none';
+  document.getElementById('g-loading').style.display = 'block';
+  document.getElementById('g-btn').disabled = true;
+  Object.assign(state, { data: null, flipped: {}, selected: {}, revealed: {} });
+  startLoadAnim();
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic: input })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Server error');
+    }
+
+    state.data = await res.json();
+    renderAll();
+    document.getElementById('r-title').textContent = state.data.title;
+    document.getElementById('g-results').style.display = 'block';
+    document.getElementById('g-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch (err) {
+    const el = document.getElementById('g-error');
+    el.style.display = 'block';
+    el.textContent = err.message || 'Something went wrong. Please try again.';
+  } finally {
+    stopLoadAnim();
+    document.getElementById('g-loading').style.display = 'none';
+    document.getElementById('g-btn').disabled = false;
+  }
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function renderAll() {
+  renderOverview(); renderKeyPoints(); renderFlashcards(); renderQuiz();
+}
+
+function renderOverview() {
+  document.getElementById('tab-overview').innerHTML = '<div class="overview-text">' +
+    state.data.overview.split(/\n\n+/).filter(p => p.trim()).map(p => `<p>${p.trim()}</p>`).join('') + '</div>';
+}
+
+function renderKeyPoints() {
+  document.getElementById('tab-keypoints').innerHTML = state.data.keyPoints.map((pt, i) =>
+    `<div class="keypoint"><span class="kp-num">0${i + 1}</span><span class="kp-text">${pt}</span></div>`
+  ).join('');
+}
+
+function renderFlashcards() {
+  document.getElementById('tab-flashcards').innerHTML =
+    '<p class="fc-hint">Tap any card to reveal the answer</p>' +
+    state.data.flashcards.map((c, i) =>
+      `<div class="flashcard unflipped" id="fc-${i}" onclick="flipCard(${i})">
+        <div class="fc-side-label q-lbl" id="fc-lbl-${i}">Question</div>
+        <div class="fc-text" id="fc-txt-${i}">${c.front}</div>
+        <span class="fc-flip-hint" id="fc-hint-${i}">tap to flip →</span>
+      </div>`
+    ).join('');
+}
+
+function flipCard(i) {
+  const card = state.data.flashcards[i];
+  state.flipped[i] = !state.flipped[i];
+  const el = document.getElementById('fc-' + i);
+  const lbl = document.getElementById('fc-lbl-' + i);
+  const txt = document.getElementById('fc-txt-' + i);
+  const hint = document.getElementById('fc-hint-' + i);
+  if (state.flipped[i]) {
+    el.className = 'flashcard flipped';
+    lbl.className = 'fc-side-label a-lbl'; lbl.textContent = 'Answer';
+    txt.textContent = card.back;
+    hint.textContent = '← flip back';
+  } else {
+    el.className = 'flashcard unflipped';
+    lbl.className = 'fc-side-label q-lbl'; lbl.textContent = 'Question';
+    txt.textContent = card.front;
+    hint.textContent = 'tap to flip →';
+  }
+}
+
+function renderQuiz() {
+  document.getElementById('tab-quiz').innerHTML =
+    `<div class="score-bar" id="score-bar">Score: <span id="score-text">0 / 0 correct</span></div>` +
+    state.data.quiz.map((q, qi) =>
+      `<div class="q-block">
+        <span class="q-num">Question ${qi + 1}</span>
+        <p class="q-text">${q.question}</p>
+        <div id="opts-${qi}">
+          ${q.options.map((opt, ai) =>
+            `<div class="q-option" id="opt-${qi}-${ai}" onclick="pickOpt(${qi}, ${ai})">${opt}</div>`
+          ).join('')}
+        </div>
+        <button class="btn-check" id="check-${qi}" onclick="revealQ(${qi})">Check answer</button>
+        <div class="q-explanation" id="expl-${qi}"></div>
+      </div>`
+    ).join('');
+}
+
+function pickOpt(qi, ai) {
+  if (state.revealed[qi]) return;
+  state.selected[qi] = ai;
+  state.data.quiz[qi].options.forEach((_, i) => {
+    document.getElementById(`opt-${qi}-${i}`).className = 'q-option' + (i === ai ? ' sel' : '');
+  });
+  document.getElementById(`check-${qi}`).style.display = 'inline-block';
+}
+
+function revealQ(qi) {
+  if (state.selected[qi] === undefined) return;
+  state.revealed[qi] = true;
+  const q = state.data.quiz[qi];
+  q.options.forEach((_, ai) => {
+    const el = document.getElementById(`opt-${qi}-${ai}`);
+    el.className = 'q-option locked' + (ai === q.correct ? ' correct' : ai === state.selected[qi] ? ' wrong' : '');
+  });
+  document.getElementById(`check-${qi}`).style.display = 'none';
+  const expl = document.getElementById(`expl-${qi}`);
+  expl.style.display = 'block';
+  expl.innerHTML = `<strong style="color:#F0EDE8;">Explanation:</strong> ${q.explanation}`;
+  updateScore();
+}
+
+function updateScore() {
+  const total = Object.keys(state.revealed).length;
+  const correct = state.data.quiz.filter((q, i) => state.revealed[i] && state.selected[i] === q.correct).length;
+  const bar = document.getElementById('score-bar');
+  if (total > 0) {
+    bar.style.display = 'flex';
+    document.getElementById('score-text').textContent = `${correct} / ${total} correct`;
+  }
+}
+</script>
+</body>
+</html>
