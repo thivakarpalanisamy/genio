@@ -160,9 +160,10 @@
 
 <div class="input-wrap">
   <div class="input-box">
-    <textarea id="g-input" placeholder="Try: 'Photosynthesis for 9th grade' or 'Demo class script for 10th CBSE Probability with timestamps and tone' or paste any content you want to learn from..."></textarea>
+    <textarea id="g-input" placeholder="Try: 'Photosynthesis for 9th grade' or paste a URL like https://en.wikipedia.org/wiki/Photosynthesis or describe a lesson script with tone and pacing...""></textarea>
     <div class="input-footer">
       <span class="input-hint">Genio detects your intent — study guide, teaching script, or both. &nbsp;<span>⌘ + Enter to generate</span></span>
+      <span id="url-badge" style="display:none;align-items:center;gap:5px;font-size:12px;background:var(--blue-dim);color:var(--blue);border:1px solid rgba(91,141,239,0.25);padding:3px 10px;border-radius:20px;">🔗 URL detected — will fetch content</span>
       <button class="btn-generate" id="g-btn" onclick="generate()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 3l1.09 3.26L16.35 7l-3.26 1.09L12 11.35 10.91 8.09 7.65 7l3.26-1.09L12 3z"/><path d="M5 14l.7 2.1L7.8 17l-2.1.7L5 19.8l-.7-2.1L2.2 17l2.1-.7L5 14z"/><path d="M19 14l.7 2.1 2.1.7-2.1.7-.7 2.1-.7-2.1-2.1-.7 2.1-.7L19 14z"/></svg>
         Generate
@@ -250,7 +251,11 @@ function loadHistory(i) {
 const loadMsgs = ['Reading your intent...', 'Generating overview...', 'Building flashcards...', 'Crafting quiz questions...', 'Writing the script...', 'Almost ready...'];
 let msgTimer = null, stepTimer = null, msgIdx = 0, stepIdx = 0;
 
-document.getElementById('g-input').addEventListener('input', function() {});
+document.getElementById('g-input').addEventListener('input', function() {
+  const val = this.value.trim();
+  const badge = document.getElementById('url-badge');
+  if (badge) badge.style.display = /^https?:\/\/.+/i.test(val) ? 'inline-flex' : 'none';
+});
 document.getElementById('g-input').addEventListener('keydown', function(e) {
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') generate();
 });
