@@ -12,15 +12,14 @@ module.exports = async function handler(req, res) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'API key not configured on server' });
 
-  const prompt = `You are Genio — a world-class AI educational designer and instructional writer.
-  // URL detection — fetch page content server-side before passing to AI
+// URL detection — fetch page content server-side before passing to AI
   let contentToProcess = topic.trim();
   const isURL = /^https?:\/\/.+/i.test(contentToProcess);
 
   if (isURL) {
     try {
       const pageRes = await fetch(contentToProcess, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Genio/1.0; +https://helloteach.in)' }
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; HelloTeach/1.0; +https://helloteach.in)' }
       });
       if (pageRes.ok) {
         const html = await pageRes.text();
@@ -32,15 +31,17 @@ module.exports = async function handler(req, res) {
           .replace(/\s+/g, ' ')
           .trim()
           .slice(0, 10000);
-        contentToProcess = 'Content from URL (' + contentToProcess + '):\n\n---\n\n' + text;
+        contentToProcess = 'Content extracted from URL (' + contentToProcess + '):\n\n' + text;
       }
     } catch (fetchErr) {
-      console.warn('URL fetch failed, treating as topic:', fetchErr.message);
+      console.warn('URL fetch failed, using as topic:', fetchErr.message);
     }
   }
+
+  const prompt = `You are HelloTeach — a world-class AI educational designer and instructional writer.
 A user has given you this input:
 """
-Topic/Content: ${contentToProcess}
+${contentToProcess}
 """
 
 STEP 1 — DETECT INTENT:
