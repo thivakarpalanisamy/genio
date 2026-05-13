@@ -32,7 +32,7 @@ module.exports = async function handler(req, res) {
           .replace(/\s+/g, ' ')
           .trim()
           .slice(0, 10000);
-        contentToProcess = `The following is content extracted from this URL: ${contentToProcess}\n\n---\n\n${text}`;
+        contentToProcess = 'Content from URL (' + contentToProcess + '):\n\n---\n\n' + text;
       }
     } catch (fetchErr) {
       console.warn('URL fetch failed, treating as topic:', fetchErr.message);
