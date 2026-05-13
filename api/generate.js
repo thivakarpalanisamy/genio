@@ -13,10 +13,34 @@ module.exports = async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'API key not configured on server' });
 
   const prompt = `You are Genio — a world-class AI educational designer and instructional writer.
+  // URL detection — fetch page content server-side before passing to AI
+  let contentToProcess = topic.trim();
+  const isURL = /^https?:\/\/.+/i.test(contentToProcess);
 
+  if (isURL) {
+    try {
+      const pageRes = await fetch(contentToProcess, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Genio/1.0; +https://helloteach.in)' }
+      });
+      if (pageRes.ok) {
+        const html = await pageRes.text();
+        const text = html
+          .replace(/<script[\s\S]*?<\/script>/gi, '')
+          .replace(/<style[\s\S]*?<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/&nbsp;/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 10000);
+        contentToProcess = `The following is content extracted from this URL: ${contentToProcess}\n\n---\n\n${text}`;
+      }
+    } catch (fetchErr) {
+      console.warn('URL fetch failed, treating as topic:', fetchErr.message);
+    }
+  }
 A user has given you this input:
 """
-${topic.trim()}
+Topic/Content: ${contentToProcess}
 """
 
 STEP 1 — DETECT INTENT:
